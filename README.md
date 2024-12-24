@@ -1,108 +1,91 @@
-# Docker_Management_Tool
-Docker Management Tool User Manual
+# Docker Management Tool
 
-Welcome to the Docker Management Tool. This guide will walk you through the key features and actions available in the tool.
+Welcome to the **Docker Management Tool**! This command-line utility simplifies the process of managing Docker containers, images, networks, and volumes. Built using shell scripting, it provides a straightforward and interactive interface for both novice and experienced Docker users.
 
-Container Management
+## Features
 
-Available Actions
+- **Container Management**
+  - View, start, stop, restart, or delete individual containers
+  - Start, stop, restart, or delete all containers
+  - View logs and inspect container details
 
-Individual Container Management
+- **Image Management**
+  - View Docker images and inspect image details
+  - List unused images
+  - Delete unused or all images
 
-Enter 1 to access individual container management.
+- **Network Management**
+  - View Docker networks and inspect network details
+  - Create and delete networks
 
-To stop a container, enter 2. The selected container will stop.
+- **Volume Management**
+  - View volumes and inspect volume details
+  - Create and delete volumes
 
-To view the logs of a container, enter 5.
+- **Container Health Monitoring**
+  - Display health status of all containers
 
-For a detailed inspection of the container, enter 6.
+- **Debugging Tools**
+  - Filter logs with timestamps
+  - Capture container events
+  - Monitor live container resource usage (CPU, memory, etc.)
 
-Start All Stopped Containers
+## Installation
 
-Enter 2 to start all stopped containers.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/docker-management-tool.git
+   ```
 
-Stop All Containers
+2. Navigate to the directory:
+   ```bash
+   cd docker-management-tool
+   ```
 
-Enter 3 to stop all containers. The available containers will turn red, indicating they are stopped.
+3. Make the script executable:
+   ```bash
+   chmod +x docker-tool.sh
+   ```
 
-Restart All Containers
+4. Run the script:
+   ```bash
+   ./docker-tool.sh
+   ```
 
-Enter 4 to restart all containers.
+## Usage
 
-Image Management
+### Main Menu
+From the main menu, you can select one of the following options:
 
-Available Actions
+1. **Container Management**
+2. **Image Management**
+3. **Network Management**
+4. **Volume Management**
+5. **Container Health Management**
+6. **Debugging Tools**
+7. **Exit**
 
-Manage Individual Images
+### Exiting
+To exit the tool, select option `0` from any menu or press `Ctrl + C`.
 
-Enter 1 to access individual image management.
+## Contribution
 
-To delete an image, enter 1.
+We welcome contributions to enhance this tool! Follow these steps to contribute:
 
-To inspect an image, enter 2 to view detailed information about the image.
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Commit your changes with a descriptive message.
+4. Push the branch to your forked repository.
+5. Create a pull request to the main repository.
 
-Check Unused Images
+## Feedback
 
-Enter 2 to list unused images. If no unused images are present, a message will indicate this.
+We value your feedback! If you have suggestions, encounter issues, or want to propose improvements, please open an issue or submit a pull request.
 
-Network Management
+## License
 
-Available Actions
+This project is licensed under the MIT License. See the `LICENSE` file for details.
 
-Inspect a Network
+---
 
-Enter 1 and provide the network ID to view logs.
-
-Create a New Network
-
-Enter 3 to create a new network.
-
-Provide a network name (e.g., "Sample Network").
-
-Select a network driver (e.g., "Bridge").
-
-The new network will be created.
-
-Delete a Network
-
-Enter 2 and provide the network ID to delete the network.
-
-Volume Management
-
-Available Actions
-
-Inspect a Volume
-
-Enter 1 and provide the volume name to view logs.
-
-Create a New Volume
-
-Enter 3 to create a new volume.
-
-Provide a volume name (e.g., "Sample Volume").
-
-The new volume will be created.
-
-Delete a Volume
-
-Enter 2 and provide the volume name to delete the volume.
-
-Container Health Check
-
-Enter 5 to check the health status of all containers. A status report will display the health of each container.
-
-Debugging Tools
-
-Available Actions
-
-Live Container Resource Usage
-
-Enter 3 to view live resource usage for containers.
-
-Exiting the Tool
-
-Enter 0 to exit the tool.
-
-Note
-
-Some actions might not be fully demonstrated in this guide. Feel free to explore all the features of the Docker Management Tool and share your feedback.
+Happy Dockerizing! 🚀
