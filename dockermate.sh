@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Advanced Docker Management Tool v5.0
+# Docker Mate v1.0
 # Comprehensive script for Docker container, image, network, and volume management
 
 # Improved Color Definitions with Extended Palette
@@ -12,8 +12,26 @@ declare -A COLORS=(
     [MAGENTA]='\033[0;35m'
     [CYAN]='\033[0;36m'
     [WHITE]='\033[1;37m'
+    [BURGUNDY]='\033[38;5;88m' 
+    [LIGHT_GREEN]='\033[1;32m'
     [RESET]='\033[0m'
 )
+
+# Enhanced Error Handling Function
+handle_error() {
+    local error_message="$1"
+    local error_code="${2:-1}"
+    
+    log_message "${COLORS[RED]}ERROR" "$error_message${COLORS[RESET]}"
+    
+    # Don't exit on errors unless specifically requested
+    if [[ "$3" == "exit" ]]; then
+        exit "$error_code"
+    fi
+    
+    read -n 1 -s -r -p "Press any key to continue..."
+    return "$error_code"
+}
 
 # Enhanced Error Handling Function
 handle_error() {
@@ -24,12 +42,40 @@ handle_error() {
     exit "$error_code"
 }
 
+# Check if command executed successfully
+check_success() {
+    if [[ $? -eq 0 ]]; then
+        echo -e "${COLORS[GREEN]}SUCCESS" "$1${COLORS[RESET]}"
+    else
+        handle_error "$2"
+    fi
+}
+
+# Confirm potentially destructive operations
+confirm_action() {
+    local action="$1"
+    echo -e "${COLORS[YELLOW]}WARNING: You're about to $action. This cannot be undone.${COLORS[RESET]}"
+    read -p "Are you sure you want to continue? (y/N): " confirm
+    [[ "$confirm" == [yY] || "$confirm" == [yY][eE][sS] ]]
+}
+
 # Function to print header
 print_header() {
     clear
     echo -e "${COLORS[BLUE]}===========================================${COLORS[RESET]}"
-    echo -e "${COLORS[CYAN]}   Docker Management Tool v5.0${COLORS[RESET]}"
+    echo -e "${COLORS[CYAN]}   DockerMate v1.0${COLORS[RESET]}"
     echo -e "${COLORS[BLUE]}===========================================${COLORS[RESET]}"
+}
+
+# Command validation to prevent injection
+validate_command() {
+    local input="$1"
+    # Check for suspicious patterns using grep instead of bash regex
+    if echo "$input" | grep -q '[;`&|$]'; then
+        handle_error "Invalid input detected. Please avoid special characters."
+        return 1
+    fi
+    return 0
 }
 
 # Function to display containers with color
@@ -98,6 +144,7 @@ manage_individual_container() {
             echo -e "4) ${COLORS[RED]}Delete${COLORS[RESET]}"
             echo -e "5) ${COLORS[BLUE]}View Logs${COLORS[RESET]}"
             echo -e "6) ${COLORS[CYAN]}Detailed Inspection${COLORS[RESET]}"
+            echo -e "7) ${COLORS[CYAN]}Execute Command${COLORS[RESET]}"
             echo -e "0) ${COLORS[YELLOW]}Back${COLORS[RESET]}"
             read -r action
             
@@ -126,6 +173,15 @@ manage_individual_container() {
                 6)
                     docker inspect "$selected_container"
                     read -n 1 -s -r -p "Press any key to continue..."
+                    ;;
+                7)
+                    echo -e "${COLORS[YELLOW]}Starting interactive shell in container. Type 'exit' to return to menu.${COLORS[RESET]}"
+                    # read -r cmd
+                    # Validate command to prevent injection
+                    if validate_command "$cmd"; then
+                        docker exec -it "$selected_container" sh
+                        read -n 1 -s -r -p "Press any key to continue..."
+                    fi
                     ;;
                 *)
                     echo -e "${COLORS[RED]}Invalid option.${COLORS[RESET]}"
@@ -200,7 +256,7 @@ manage_containers() {
 
         case $container_action in
             0)
-                echo -e "${COLORS[GREEN]}Thank you for using Docker Management Tool v5.0${COLORS[RESET]}"
+                echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0${COLORS[RESET]}"
                 exit 0
                 ;;
             1)
@@ -261,35 +317,52 @@ manage_images() {
 
         echo -e "${COLORS[YELLOW]}Choose an image management action:${COLORS[RESET]}"
         echo -e "1) ${COLORS[CYAN]}Individual Image Management${COLORS[RESET]}"
-        echo -e "2) ${COLORS[BLUE]}List Unused Images${COLORS[RESET]}"
-        echo -e "3) ${COLORS[RED]}Delete Unused Images${COLORS[RESET]}"
-        echo -e "4) ${COLORS[RED]}Delete ALL Images${COLORS[RESET]}"
-        echo -e "5) ${COLORS[YELLOW]}Back${COLORS[RESET]}"
+        echo -e "2) ${COLORS[GREEN]}Pull New Image${COLORS[RESET]}"
+        echo -e "3) ${COLORS[BLUE]}List Dangling Images${COLORS[RESET]}"
+        echo -e "4) ${COLORS[RED]}Prune Unused Image${COLORS[RESET]}"
+        echo -e "5) ${COLORS[RED]}Delete ALL Images${COLORS[RESET]}"
+        echo -e "6) ${COLORS[YELLOW]}Back${COLORS[RESET]}"
         echo -e "0) ${COLORS[WHITE]}Exit${COLORS[RESET]}"
         read -r image_action
 
         case $image_action in
             0)
-                echo -e "${COLORS[GREEN]}Thank you for using Docker Management Tool v5.0${COLORS[RESET]}"
+                echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0${COLORS[RESET]}"
                 exit 0
                 ;;
             1)
                 manage_individual_image
                 ;;
             2)
-                list_unused_images
-                read -n 1 -s -r -p "Press any key to continue..."
+                echo -e "${COLORS[YELLOW]}Enter image name (e.g. ubuntu:latest):${COLORS[RESET]}"
+                read -r image_name
+                
+                if validate_command "$image_name"; then
+                    docker pull "$image_name"
+                    check_success "Image '$image_name' pulled successfully." "Failed to pull image '$image_name'."
+                    read -n 1 -s -r -p "Press any key to continue..."
+                fi
                 ;;
             3)
-                delete_unused_images
+                echo -e "${COLORS[BLUE]}Dangling Images:${COLORS[RESET]}"
+                if ! docker images -f "dangling=true" --format "table {{.ID}}\t{{.Repository}}\t{{.Tag}}\t{{.Size}}"; then
+                    echo -e "${COLORS[YELLOW]}INFO" "No dangling images found.${COLORS[RESET]}"
+                fi
                 read -n 1 -s -r -p "Press any key to continue..."
                 ;;
             4)
+                if confirm_action "remove all unused images"; then
+                    docker image prune -f
+                    check_success "All unused images removed." "Failed to remove images or no unused images."
+                fi
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            5)
                 echo -e "${COLORS[RED]}Deleting ALL images...${COLORS[RESET]}"
                 docker rmi -f $(docker images -q) && echo -e "${COLORS[RED]}All images deleted.${COLORS[RESET]}"
                 read -n 1 -s -r -p "Press any key to continue..."
                 ;;
-            5)
+            6)
                 return
                 ;;
             *)
@@ -341,7 +414,7 @@ network_management() {
                 return
                 ;;
             0)
-                echo -e "${COLORS[GREEN]}Thank you for using Docker Management Tool v5.0${COLORS[RESET]}"
+                echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0${COLORS[RESET]}"
                 exit 0
                 ;;
             *)
@@ -390,7 +463,7 @@ volume_management() {
                 return
                 ;;
             0)    
-                echo -e "${COLORS[GREEN]}Thank you for using Docker Management Tool v5.0${COLORS[RESET]}"
+                echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0${COLORS[RESET]}"
                 exit 0
                 ;;
             *)
@@ -432,17 +505,32 @@ debugging_tools() {
     while true; do
         print_header
         echo -e "${COLORS[YELLOW]}Debugging Tools Menu:${COLORS[RESET]}"
-        echo -e "1) ${COLORS[CYAN]}Filter Logs with Timestamps${COLORS[RESET]}"
-        echo -e "2) ${COLORS[BLUE]}Capture Container Events${COLORS[RESET]}"
-        echo -e "3) ${COLORS[MAGENTA]}Live Container Resource Usage${COLORS[RESET]}"
-        echo -e "4) ${COLORS[GREEN]}Detailed Container Logs${COLORS[RESET]}"
-        echo -e "5) ${COLORS[YELLOW]}Back to Main Menu${COLORS[RESET]}"
+        echo -e "1) ${COLORS[BLUE]}Docker Info${COLORS[RESET]}"
+        echo -e "2) ${COLORS[GREEN]}Docker Version${COLORS[RESET]}"
+        echo -e "3) ${COLORS[MAGENTA]}Disk Usage${COLORS[RESET]}"
+        echo -e "4) ${COLORS[CYAN]}Filter Logs with Timestamps${COLORS[RESET]}"
+        echo -e "5) ${COLORS[BLUE]}Capture Container Events${COLORS[RESET]}"
+        echo -e "6) ${COLORS[MAGENTA]}Live Container Resource Usage${COLORS[RESET]}"
+        echo -e "7) ${COLORS[GREEN]}Detailed Container Logs${COLORS[RESET]}"
+        echo -e "8) ${COLORS[YELLOW]}Back to Main Menu${COLORS[RESET]}"
         echo -e "0) ${COLORS[WHITE]}Exit${COLORS[RESET]}"
         
         read -r debug_choice
         
         case $debug_choice in
             1)
+                docker info
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            2)
+                docker version
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            3)
+                docker system df -v
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            4)
                 echo -e "${COLORS[YELLOW]}Enter container name to filter logs:${COLORS[RESET]}"
                 read -r container_name
                 echo -e "${COLORS[YELLOW]}Enter start time (YYYY-MM-DD HH:MM:SS):${COLORS[RESET]}"
@@ -452,17 +540,17 @@ debugging_tools() {
                 sudo docker logs --since "$start_time" --until "$end_time" "$container_name"
                 read -n 1 -s -r -p "Press any key to continue..."
                 ;;
-            2)
+            5)
                 echo -e "${COLORS[BLUE]}Capturing Docker events (press Ctrl+C to stop):${COLORS[RESET]}"
                 sudo docker events
                 read -n 1 -s -r -p "Press any key to continue..."
                 ;;
-            3)
-                echo -e "${COLORS[MAGENTA]}Live Container Resource Usage:${COLORS[RESET]}"
+            6)
+                echo -e "${COLORS[MAGENTA]}Live Container Resource Usage (press Ctrl+C to stop):${COLORS[RESET]}"
                 sudo docker stats
                 read -n 1 -s -r -p "Press any key to continue..."
                 ;;
-            4)
+            7)
                 echo -e "${COLORS[GREEN]}Enter container name for detailed logs:${COLORS[RESET]}"
                 read -r container_name
                 echo -e "${COLORS[YELLOW]}Select log tail count (default 50):${COLORS[RESET]}"
@@ -471,11 +559,11 @@ debugging_tools() {
                 sudo docker logs -f --tail "$log_count" "$container_name"
                 read -n 1 -s -r -p "Press any key to continue..."
                 ;;
-            5)
+            8)
                 return
                 ;;
             0)
-                echo -e "${COLORS[GREEN]}Thank you for using Docker Management Tool v5.0${COLORS[RESET]}"
+                echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0${COLORS[RESET]}"
                 exit 0
                 ;;
             *)
@@ -486,9 +574,75 @@ debugging_tools() {
     done
 }
 
+# Cleanup Menu
+cleanup_menu() {
+    while true; do
+        print_header
+        
+        echo -e "${COLORS[YELLOW]}Cleanup Menu:${COLORS[RESET]}"
+        echo -e "1) ${COLORS[RED]}Prune Stopped Containers${COLORS[RESET]}"
+        echo -e "2) ${COLORS[RED]}Prune Unused Images${COLORS[RESET]}"
+        echo -e "3) ${COLORS[RED]}Prune Unused Volumes${COLORS[RESET]}"
+        echo -e "4) ${COLORS[RED]}Prune Unused Networks${COLORS[RESET]}"
+        echo -e "5) ${COLORS[RED]}System Prune (ALL)${COLORS[RESET]}"
+        echo -e "6) ${COLORS[YELLOW]}Back${COLORS[RESET]}"
+        echo -e "0) ${COLORS[WHITE]}Exit${COLORS[RESET]}"
+        
+        read -r option
+        
+        case $option in
+            1)
+                if confirm_action "remove all stopped containers"; then
+                    docker container prune -f
+                    check_success "All stopped containers removed." "Failed to remove containers."
+                fi
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            2)
+                if confirm_action "remove all unused images"; then
+                    docker image prune -f
+                    check_success "All unused images removed." "Failed to remove images."
+                fi
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            3)
+                if confirm_action "remove all unused volumes"; then
+                    docker volume prune -f
+                    check_success "All unused volumes removed." "Failed to remove volumes."
+                fi
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            4)
+                if confirm_action "remove all unused networks"; then
+                    docker network prune -f
+                    check_success "All unused networks removed." "Failed to remove networks."
+                fi
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            5)
+                if confirm_action "remove ALL unused Docker resources (containers, images, networks, and volumes)"; then
+                    docker system prune -a -f --volumes
+                    check_success "All unused Docker resources removed." "Failed to remove resources."
+                fi
+                read -n 1 -s -r -p "Press any key to continue..."
+                ;;
+            6) 
+                return
+                ;;
+            0)
+                echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0${COLORS[RESET]}"
+                exit 0
+                ;;
+            *)
+                handle_error "Invalid option."
+                ;;
+        esac
+    done
+}
+
 # Define the trap handler for Ctrl+C
 trap_ctrl_c() {
-    echo -e "${COLORS[GREEN]}Thank you for using Docker Management Tool v5.0${COLORS[RESET]}"
+    echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0${COLORS[RESET]}"
     exit 0
 }
 
@@ -497,13 +651,14 @@ main_menu() {
     while true; do
         print_header
         
-        echo -e "${COLORS[YELLOW]}Docker Management Tool - Main Menu${COLORS[RESET]}"
+        echo -e "${COLORS[YELLOW]}DockerMate - Main Menu${COLORS[RESET]}"
         echo -e "1) ${COLORS[CYAN]}Container Management${COLORS[RESET]}"
         echo -e "2) ${COLORS[BLUE]}Image Management${COLORS[RESET]}"
         echo -e "3) ${COLORS[GREEN]}Network Management${COLORS[RESET]}"
         echo -e "4) ${COLORS[MAGENTA]}Volume Management${COLORS[RESET]}"
-        echo -e "5) ${COLORS[RED]}Container Health Check${COLORS[RESET]}"
+        echo -e "5) ${COLORS[LIGHT_GREEN]}Container Health Check${COLORS[RESET]}"
         echo -e "6) ${COLORS[YELLOW]}Debugging Tools${COLORS[RESET]}"
+        echo -e "7) ${COLORS[RED]}Cleanup Operations${COLORS[RESET]}"
         echo -e "0) ${COLORS[WHITE]}Exit${COLORS[RESET]}"
         
         read -r menu_choice
@@ -527,8 +682,11 @@ main_menu() {
 	        6)
                 debugging_tools
                 ;;
+            7) 
+                cleanup_menu
+                ;;
             0)
-                echo -e "${COLORS[GREEN]}Thank you for using Docker Management Tool v5.0${COLORS[RESET]}"
+                echo -e "${COLORS[GREEN]}Thank you for using DockerMate v1.0 ${COLORS[RESET]}"
                 exit 0
                 ;;
             *)
@@ -555,7 +713,7 @@ main() {
     check_docker_installation
 	
     # Log script start
-    log_message "INFO" "Starting Docker Management Tool"
+    echo -e "INFO" "Starting DockerMate v1.0"
     
     # Start main menu
     main_menu
