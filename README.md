@@ -1,6 +1,6 @@
-# Docker Management Tool
+# DockerMate
 
-Welcome to the **Docker Management Tool**! This command-line utility simplifies the process of managing Docker containers, images, networks, and volumes. Built using shell scripting, it provides a straightforward and interactive interface for both novice and experienced Docker users.
+Welcome to the **DockerMate**! This command-line utility simplifies the process of managing Docker containers, images, networks, and volumes. Built using shell scripting, it provides a straightforward and interactive interface for both novice and experienced Docker users.
 
 ## Features
 
