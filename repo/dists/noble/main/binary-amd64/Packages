@@ -1,0 +1,21 @@
+Package: dockermate
+Architecture: all
+Version: 1.0
+Priority: optional
+Section: admin
+Maintainer: Nikhil Raghupathy <rnikhilvignesh21@gmail.com>
+Installed-Size: 40
+Depends: docker.io | docker-ce, bash (>= 4.0)
+Filename: pool/main/d/dockermate/dockermate_1.0_all.deb
+Size: 6466
+MD5sum: 0a9ce5f9063a4265c0f8ce1c108bc4f3
+SHA1: a79de6ab500a03d93b13c97d61b39643230325c3
+SHA256: 1b633223050814ffe9aaa2f5a3732207063bc463ddcdf73cb5e3dc92f6f64f37
+SHA512: c5318c60fc23d771cfe3d934bb28f8847c7cf427b4de47ef1840f8bb41dfe191686589ddf8eb4f6d24cbe201212040e828c89b48e7365a018e030da5c11afb86
+Homepage: https://github.com/Nikhil-r21/dockermate
+Description: Comprehensive Docker management tool
+ DockerMate provides a comprehensive UI-based utility for
+ managing Docker containers, images, networks, and volumes.
+ It offers intuitive menus for various Docker operations,
+ debugging tools, and system cleanup functions.
+
