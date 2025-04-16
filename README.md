@@ -4,16 +4,17 @@
 1. [Introduction](#introduction)
 2. [Prerequisites](#prerequisites)
 3. [Getting Started](#getting-started)
-4. [Main Menu Overview](#main-menu-overview)
-5. [Container Management](#container-management)
-6. [Image Management](#image-management)
-7. [Network Management](#network-management)
-8. [Volume Management](#volume-management)
-9. [Container Health Check](#container-health-check)
-10. [Debugging Tools](#debugging-tools)
-11. [Cleanup Operations](#cleanup-operations)
-12. [Error Handling](#error-handling)
-13. [Tips and Best Practices](#tips-and-best-practices)
+4. [Installation Setup](#installation-setup)
+5. [Main Menu Overview](#main-menu-overview)
+6. [Container Management](#container-management)
+7. [Image Management](#image-management)
+8. [Network Management](#network-management)
+9. [Volume Management](#volume-management)
+10. [Container Health Check](#container-health-check)
+11. [Debugging Tools](#debugging-tools)
+12. [Cleanup Operations](#cleanup-operations)
+13. [Error Handling](#error-handling)
+14. [Tips and Best Practices](#tips-and-best-practices)
 
 ## Introduction
 
@@ -39,6 +40,30 @@ DockerMate v1.0 is a comprehensive Bash script designed to simplify Docker conta
    ```
 
 When you launch DockerMate, the script first checks if Docker is installed on your system. If Docker is not detected, the script will display an error message and exit.
+
+## Installation Setup
+
+To install DockerMate, follow the steps below:
+1. Add the DockerMate repository:
+   ```
+   sudo sh -c 'echo "deb [trusted=yes] https://nikhil-r21.github.io/dockermate/repo/ noble main" > /etc/apt/sources.list.d/dockermate.list'
+   ```
+2. Import the GPG key:
+   ```
+   wget -qO - https://nikhil-r21.github.io/dockermate/repo-key.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/dockermate.gpg
+   ```
+3. Update package lists:
+   ```
+   sudo apt update
+   ```
+4. Install DockerMate:
+   ```
+   sudo apt install dockermate
+   ```
+5. Run DockerMate:
+   ```
+   sudo dockermate
+   ```
 
 ## Main Menu Overview
 
